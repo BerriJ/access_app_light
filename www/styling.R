@@ -2,7 +2,7 @@ button_accept <- "color: rgba(0, 0, 0, 0.5);
                          background-color: #00a65a;
                          width: 100%;
                          margin: auto;
-                         height: 60px;
+                         height: 120px;
                          border-color:#00a65a;
                          font-size: 30px"
 

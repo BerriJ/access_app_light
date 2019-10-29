@@ -3,20 +3,22 @@ source("www/functions.R")
 source("www/styling.R")
 
 # Set options for data tables:
-options(DT.options = list(pageLength = 10, lengthMenu = c(10, 25, 50, 100,250)))
+options(DT.options = list(pageLength = 5, lengthMenu = c(5, 25, 50, 100,250)))
 
 # Ask for backup path from user
-rstudioapi::showDialog("Backup Path", message = "The next step asks you to select
-                       a folder for backups. Consider using an external Device
-                       for this. A backup is created for every change and named
-                       by date and time.")
-backup_path <- rstudioapi::selectDirectory(caption = "Backup Folder")
+# rstudioapi::showDialog("Backup Path", message = "The next step asks you to select
+#                        a folder for backups. Consider using an external Device
+#                        for this. A backup is created for every change and named
+#                        by date and time.")
+# backup_path <- rstudioapi::selectDirectory(caption = "Backup Folder")
+# 
+# while(is.null(backup_path)){
+#   rstudioapi::showDialog("Backup Path", 
+#                          message = "Seriously: select a backup folder!")
+#   backup_path <- rstudioapi::selectDirectory(caption = "Backup Folder")
+# }
 
-while(is.null(backup_path)){
-  rstudioapi::showDialog("Backup Path", 
-                         message = "Seriously: select a backup folder!")
-  backup_path <- rstudioapi::selectDirectory(caption = "Backup Folder")
-}
+backup_path <- "~/git"
 
 # Create log folder if not existent
 dir.create("backup", showWarnings = F)
@@ -36,67 +38,7 @@ ui <- dashboardPage(skin = "green",
                     
                     dashboardHeader(title = "Students ID Check", disable = FALSE),
                     
-                    dashboardSidebar(width = "350",
-                                     
-                                     fluidRow(align = "center",
-                                              searchInput(
-                                                inputId = "search",
-                                                label = h3("Search by Name or Number"), 
-                                                placeholder = "Press Enter to search.", 
-                                                btnSearch = icon("search"), 
-                                                btnReset = icon("remove"), 
-                                                width = "84%")),
-                                     fluidRow(align = "center", column(10, offset = 1,
-                                              actionButton("accept", "",
-                                                                     style = button_accept,
-                                                                     icon = icon("user-check")))),
-                                     fluidRow(align = "center", style = "padding-top:20px",
-                                              column(10, offset = 1, box( width = "NULL", collapsible = T, collapsed = T, title = "Take Note or Decline", background = "red",
-                                                                          searchInput(
-                                                                            inputId = "note", 
-                                                                            label = NULL, 
-                                                                            value = NULL,
-                                                                            placeholder = "Press Enter to save.", 
-                                                                            btnSearch = icon("save"), 
-                                                                            btnReset = icon("remove"), 
-                                                                            width = "100%"),
-                                                                          actionButton("decline", # Row for accept decline buttons
-                                                                                       "",
-                                                                                       style = button_decline,
-                                                                                       icon = icon("user-times"))
-                                                
-                                              ))),
-                                     # Info box for sum of accepted students
-                                     fluidRow(align = "center",
-                                              column(10, offset = 1,valueBoxOutput("progressBox", width = NULL))),
-                                     
-                                     # Info box for sum of students with a note
-                                     fluidRow(align = "center",style = "position:fixed, bottom:0",
-                                              column(10, offset = 1,valueBoxOutput("progressBox2", width = NULL))),
-                                     
-                                     # Shift options
-                                     fluidRow(align = "center", style = "position:fixed, bottom:0",
-                                              column(10, offset = 1, box(
-                                                width = "NULL", collapsible = T, collapsed = T, title = "Shift options",background = "maroon",
-                                                radioGroupButtons(
-                                                  inputId = "shiftnumber",
-                                                  label = "Shift", 
-                                                  choices = c("1", "2", "3", "4"),
-                                                  status = "success",
-                                                  width = "100%"
-                                                ),
-                                                tags$style(slider_maxnumshift),
-                                                sliderInput("maxnumshift", "Notify me at:", 25, 220, 65, 1, 
-                                                            width = "100%", post = " Students"),
-                                                actionButton("finish_shift", # Row for accept decline buttons
-                                                             "Close Shift",
-                                                             style = button_finish_shift)
-                                              ))),
-                                     # Backup path
-                                     fluidRow(style = "padding-bottom:20px",
-                                              htmlOutput("backup")),
-                                     # Include footer
-                                     includeCSS("www/footer.css"), includeHTML("www/footer.html")),
+                    dashboardSidebar(disable = T),
                     
                     dashboardBody( # Main Panel
                       
@@ -104,22 +46,87 @@ ui <- dashboardPage(skin = "green",
                       tags$head(includeScript("www/refocus_search.js")),
                       # Include Github corner
                       includeHTML("www/github.html"),
-                      # Box with search result: 
-                      box(title = "Search Result:",
-                          collapsible = FALSE, width = NULL,
-                          h2(htmlOutput("results"), align = "center")
-                      ),
                       # Box with various tabs that show subsets of students dataframe
+                      
                       fluidRow(
+                      column(9, offset = 0,
                       tabBox(
                         width = NULL, title = "Overview",side = "right", selected = "Checked In",
                         tabPanel("Checked In", DT::dataTableOutput("studtable_accept")),
                         tabPanel("Open", DT::dataTableOutput("studtable_open")),
                         tabPanel("With Note", DT::dataTableOutput("studtable_note")),
-                        tabPanel("Declined", DT::dataTableOutput("studtable_decline")),
-                        tabPanel("All", DT::dataTableOutput("studtable_all")),
-                        tabPanel("Stats", DT::dataTableOutput("stats"))
-                      ))
+                        tabPanel("Declined", DT::dataTableOutput("studtable_decline"))
+                      )),
+                      column(3, offset = 0,
+                      valueBoxOutput("progressBox", width = NULL),
+                      valueBoxOutput("progressBox2", width = NULL),
+                      box(
+                        width = "NULL", collapsible = T, collapsed = T, title = "Shift options",background = "maroon",
+                        radioGroupButtons(
+                          inputId = "shiftnumber",
+                          label = "Shift", 
+                          choices = c("1", "2", "3", "4"),
+                          status = "success",
+                          width = "100%"
+                        ),
+                        tags$style(slider_maxnumshift),
+                        sliderInput("maxnumshift", "Notify me at:", 25, 220, 65, 1, 
+                                    width = "100%", post = " Students"),
+                        actionButton("finish_shift", # Row for accept decline buttons
+                                     "Close Shift",
+                                     style = button_finish_shift)
+                      ))),
+                      fluidRow(
+                      # Box with search result: 
+                      box(title = "Search Result:",
+                          collapsible = FALSE, width = NULL,
+                          h2(htmlOutput("results"), align = "center")
+                      )),
+                      fluidRow(align = "center",
+                      column(4, offset = 0,
+                             searchInput(
+                               inputId = "search",
+                               label = h3("Search by Name or Number"), 
+                               placeholder = "Press Enter to search.", 
+                               btnSearch = icon("search"), 
+                               btnReset = icon("remove"), 
+                               width = "84%")),
+                      column(4,
+                             actionButton("accept", "",
+                                          style = button_accept,
+                                          icon = icon("user-check"))),
+                      column(4, box( width = "NULL", collapsible = T, collapsed = F, title = "Take Note or Decline", background = "red",
+                                                  searchInput(
+                                                    inputId = "note", 
+                                                    label = NULL, 
+                                                    value = NULL,
+                                                    placeholder = "Press Enter to save.", 
+                                                    btnSearch = icon("save"), 
+                                                    btnReset = icon("remove"), 
+                                                    width = "100%"),
+                                                  actionButton("decline", # Row for accept decline buttons
+                                                               "",
+                                                               style = button_decline,
+                                                               icon = icon("user-times"))
+                                                  
+                      ))),
+                      fluidRow(align = "center", style = "padding-top:20px"),
+                      # Info box for sum of accepted students
+                      fluidRow(align = "center",
+                               column(10, offset = 1)),
+                      
+                      # Info box for sum of students with a note
+                      fluidRow(align = "center",style = "position:fixed, bottom:0",
+                               column(10, offset = 1)),
+                      
+                      # Shift options
+                      fluidRow(align = "center", style = "position:fixed, bottom:0",
+                               column(10, offset = 1)),
+                      # Backup path
+                      fluidRow(style = "padding-bottom:20px",
+                               htmlOutput("backup")),
+                      # Include footer
+                      includeCSS("www/footer.css"), includeHTML("www/footer.html")
                     )
 )
 
@@ -244,19 +251,6 @@ server <- function(input, output, session) {
                           columnDefs = list(list(
                             className = 'dt-center',
                             targets = 0:6))))
-  output$studtable_all <- 
-    DT::renderDataTable(students() %>%
-                          arrange(desc(modified)) %>%
-                          dplyr::select(-modified),rownames = FALSE,
-                        options = list(
-                          columnDefs = list(list(
-                            className = 'dt-center',
-                            targets = 0:6))))
-  output$stats <- 
-    DT::renderDataTable(stats(),rownames = FALSE,options = list(
-                          columnDefs = list(list(
-                            className = 'dt-center',
-                            targets = 0:1))))
   
   # Accept Event
   
