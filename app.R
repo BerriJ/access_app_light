@@ -18,7 +18,7 @@ options(DT.options = list(pageLength = 5, lengthMenu = c(5, 25, 50, 100,250)))
 #   backup_path <- rstudioapi::selectDirectory(caption = "Backup Folder")
 # }
 
-backup_path <- "~/git"
+backup_path <- getwd()
 
 # Create log folder if not existent
 dir.create("backup", showWarnings = F)
@@ -123,10 +123,10 @@ ui <- dashboardPage(skin = "green",
                       fluidRow(align = "center", style = "position:fixed, bottom:0",
                                column(10, offset = 1)),
                       # Backup path
-                      fluidRow(style = "padding-bottom:20px",
-                               htmlOutput("backup")),
+                      # fluidRow(style = "padding-bottom:20px",
+                      #         htmlOutput("backup")),
                       # Include footer
-                      includeCSS("www/footer.css"), includeHTML("www/footer.html")
+                      # includeCSS("www/footer.css"), includeHTML("www/footer.html")
                     )
 )
 
