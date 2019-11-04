@@ -1,9 +1,10 @@
-library(shinydashboard)
-library(shiny)
-library(DT)
-library(dplyr)
-library(stringr)
-library(shinyWidgets)
-library(RSQLite)
-library(DBI)
-library(pool)
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(shinydashboard, 
+               shiny, 
+               DT,
+               dplyr,
+               stringr,
+               shinyWidgets,
+               RSQLite,
+               DBI,
+               pool)

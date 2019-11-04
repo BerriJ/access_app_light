@@ -1,8 +1,9 @@
-library(readxl)
-library(dplyr)
-library(tibble)
-library(RSQLite)
-library(pool)
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(readxl, 
+               dplyr, 
+               tibble,
+               RSQLite,
+               pool)
 
 dataset <- read_excel(file.choose(),skip = 4)
 
