@@ -6,6 +6,14 @@ button_accept <- "color: rgba(0, 0, 0, 0.5);
                          border-color:#00a65a;
                          font-size: 30px"
 
+button_accept_wo_id <- "color: rgba(0, 0, 0, 0.5);
+                         background-color: #ffa200;
+                         width: 100%;
+                         margin: auto;
+                         height: 120px;
+                         border-color:#ffa200;
+                         font-size: 30px"
+
 button_decline <- "color: rgba(0, 0, 0, 0.5);
                          background-color: #963226;
                          width: 99%;

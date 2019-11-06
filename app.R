@@ -58,8 +58,11 @@ ui <- dashboardPage(skin = "green",
                         tabPanel("Declined", DT::dataTableOutput("studtable_decline"))
                       )),
                       column(3, offset = 0,
+                      # Students checked in box
                       valueBoxOutput("progressBox", width = NULL),
+                      # Students with a note box
                       valueBoxOutput("progressBox2", width = NULL),
+                      # Shift Options Box
                       box(
                         width = "NULL", collapsible = T, collapsed = T, title = "Shift options",background = "maroon",
                         radioGroupButtons(
@@ -75,10 +78,24 @@ ui <- dashboardPage(skin = "green",
                         actionButton("finish_shift", # Row for accept decline buttons
                                      "Close Shift",
                                      style = button_finish_shift)
-                      ))),
+                      ),
+                      # Take Note or Decline Box
+                      box(width = "NULL", collapsible = T, collapsed = T, title = "Take Note or Decline", background = "red",
+                          searchInput(
+                            inputId = "note", 
+                            label = NULL, 
+                            value = NULL,
+                            placeholder = "Press Enter to save.", 
+                            btnSearch = icon("save"), 
+                            btnReset = icon("remove"), 
+                            width = "100%"),
+                          actionButton("decline", # Row for accept decline buttons
+                                       "",
+                                       style = button_decline,
+                                       icon = icon("user-times"))))),
                       fluidRow(
                       # Box with search result: 
-                      box(title = "Search Result:",
+                      box(#title = "Search Result:",
                           collapsible = FALSE, width = NULL,
                           h2(htmlOutput("results"), align = "center")
                       )),
@@ -92,25 +109,16 @@ ui <- dashboardPage(skin = "green",
                                btnReset = icon("remove"), 
                                width = "84%")),
                       column(4,
-                             actionButton("accept", "",
+                             actionButton("accept", "Accept",
                                           style = button_accept,
                                           icon = icon("user-check"))),
-                      column(4, box( width = "NULL", collapsible = T, collapsed = F, title = "Take Note or Decline", background = "red",
-                                                  searchInput(
-                                                    inputId = "note", 
-                                                    label = NULL, 
-                                                    value = NULL,
-                                                    placeholder = "Press Enter to save.", 
-                                                    btnSearch = icon("save"), 
-                                                    btnReset = icon("remove"), 
-                                                    width = "100%"),
-                                                  actionButton("decline", # Row for accept decline buttons
-                                                               "",
-                                                               style = button_decline,
-                                                               icon = icon("user-times"))
-                                                  
-                      ))),
-                      fluidRow(align = "center", style = "padding-top:20px"),
+                      column(4,
+                      # Pre defined actions:
+                      # Accept without ID Card
+                      actionButton("accept_wo_id", "Accept without ID",
+                                   style = button_accept_wo_id,
+                                   icon = icon("exclamation-triangle")))),
+                      #fluidRow(align = "center", style = "padding-top:20px"),
                       # Info box for sum of accepted students
                       fluidRow(align = "center",
                                column(10, offset = 1)),
@@ -121,7 +129,7 @@ ui <- dashboardPage(skin = "green",
                       
                       # Shift options
                       fluidRow(align = "center", style = "position:fixed, bottom:0",
-                               column(10, offset = 1)),
+                               column(10, offset = 1))#,
                       # Backup path
                       # fluidRow(style = "padding-bottom:20px",
                       #         htmlOutput("backup")),
