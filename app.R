@@ -262,7 +262,10 @@ server <- function(input, output, session) {
   
   # Accept Event
   
-  observeEvent(input$accept, {
+  observeEvent({
+    input$accept
+    input$accept_wo_id
+    }, {
     
     sid_a <- which(str_detect(input$search,
                               as.character(students()$matrnumber)) |
@@ -351,6 +354,41 @@ server <- function(input, output, session) {
       }
     }})
   
+  # Add note if accepted without ID
+  
+  observeEvent(input$accept_wo_id, {
+    
+    sid_n <- which(str_detect(input$search,
+                              as.character(students()$matrnumber)) |
+                     students()$name == input$search)
+    
+    # Take Note if single student is selected else notify
+    if(length(sid_n) == 1){
+      
+      if(dbReadTable(con, "students")[sid_n, "accepted"] == FALSE | is.na(dbReadTable(con, "students")[sid_n, "accepted"])){
+        con %>% dbExecute(paste("UPDATE students ",
+                                "SET note = '", paste(na.omit(c(students()[sid_n, "note"], "Accepted without ID")), collapse = " "),"', log = '", paste(na.omit(c(students()[sid_n, "log"],as.character(Sys.time()), "[N]")), collapse = " "),"', modified = '", Sys.time(), "' ",
+                                "WHERE matrnumber = ",students()[sid_n, "matrnumber"], sep = ""))
+        
+        # Save a log, backup data, reset- and refocus search field
+        log_backup_reset(sid = sid_n, 
+                         event = "[N]", 
+                         data = dbReadTable(con, "students"),
+                         note = input$note,
+                         stats = dbReadTable(con, "stats"),
+                         session = session,
+                         backup_path = backup_path)
+        # Clear Note field
+        updateSearchInput(session, "note", value = "", trigger = FALSE)
+        }
+    } else {
+      if(input$note != ""){
+        sendSweetAlert(session, title = "Selection",
+                       text = "Please select one student.")
+      }
+    }
+  })
+  
   # Decline Event
   # Ask user to confirm or cancel
   observeEvent(input$decline, {
@@ -372,6 +410,7 @@ server <- function(input, output, session) {
         sendSweetAlert(session, title = "Can't Check Out!",
                        text = "Can't check out! This student is still marked as checked out. Consider taking a note!")
       }}})
+  
   
   observeEvent(input$decline_confirm, {
     if(isTRUE(input$decline_confirm)) {
