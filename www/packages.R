@@ -7,4 +7,7 @@ pacman::p_load(shinydashboard,
                shinyWidgets,
                RSQLite,
                DBI,
-               pool)
+               pool,
+               shinysense,
+               png,
+               tesseract)

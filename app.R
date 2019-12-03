@@ -135,6 +135,19 @@ ui <- dashboardPage(skin = "green",
                       #         htmlOutput("backup")),
                       # Include footer
                       # includeCSS("www/footer.css"), includeHTML("www/footer.html")
+                      ,
+                      fluidRow(
+                        column(
+                          width = 8,
+                          shinyviewr_UI("my_camera", height = '400px')
+                        ),
+                        column(
+                          width = 3,
+                          offset = 1,
+                          h2("Taken Photo"),
+                          imageOutput("snapshot")
+                        )
+                      )
                     )
 )
 
@@ -143,6 +156,28 @@ ui <- dashboardPage(skin = "green",
 ################################################################################
 
 server <- function(input, output, session) {
+  
+  #server side call of the drawr module
+  camera_snapshot <- callModule(
+    shinyviewr,
+    'my_camera',
+    output_width = 200,
+    output_height = 200
+  )
+  
+  output$snapshot <- renderPlot({
+    req(camera_snapshot())
+    par(mar = c(0,0,0,0))
+    plot(camera_snapshot(), main = 'My Photo!')
+    snap <- camera_snapshot()
+    png(file="tmp",
+        width=1000, height=1000)
+    par(mar = c(0,0,0,0))
+    plot(camera_snapshot(), main = 'My Photo!')
+    dev.off()
+    numbers <- tesseract(options = list(tessedit_char_whitelist = "0123456789"))
+    updateSearchInput(session, "search", value = ocr("tmp", engine = numbers), trigger = TRUE)
+  })
   
   students  <- function(){}
   stats     <- function(){}
