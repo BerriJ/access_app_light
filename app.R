@@ -38,19 +38,16 @@ ui <- dashboardPage(skin = "green",
                     
                     dashboardHeader(title = "Students ID Check", disable = FALSE),
                     
-                    # No sidebar for "light" version
                     dashboardSidebar(disable = T),
                     
-                    # Main Panel
-                    dashboardBody(
+                    dashboardBody( # Main Panel
                       
                       # Refocus search bar after action
                       tags$head(includeScript("www/refocus_search.js")),
-                      
                       # Include Github corner
                       includeHTML("www/github.html"),
-                      
                       # Box with various tabs that show subsets of students dataframe
+                      
                       fluidRow(
                       column(9, offset = 0,
                       tabBox(
@@ -61,15 +58,10 @@ ui <- dashboardPage(skin = "green",
                         tabPanel("Declined", DT::dataTableOutput("studtable_decline"))
                       )),
                       column(3, offset = 0,
-                      
-                      # Sidebar
-                      
                       # Students checked in box
                       valueBoxOutput("progressBox", width = NULL),
-                      
                       # Students with a note box
                       valueBoxOutput("progressBox2", width = NULL),
-                      
                       # Shift Options Box
                       box(
                         width = "NULL", collapsible = T, collapsed = T, title = "Shift options",background = "maroon",
@@ -87,7 +79,6 @@ ui <- dashboardPage(skin = "green",
                                      "Close Shift",
                                      style = button_finish_shift)
                       ),
-                      
                       # Take Note or Decline Box
                       box(width = "NULL", collapsible = T, collapsed = T, title = "Take Note or Decline", background = "red",
                           searchInput(
@@ -101,23 +92,13 @@ ui <- dashboardPage(skin = "green",
                           actionButton("decline", # Row for accept decline buttons
                                        "",
                                        style = button_decline,
-                                       icon = icon("user-times"))),
-                      
-                      # Input matr. number via camera and text recognition
-                      box(width = NULL, collapsible = T, collapsed = T, title = "Camera Input",
-                          column(
-                            width = 8,
-                            shinyviewr_UI("my_camera", height = '400px')
-                          )))),
+                                       icon = icon("user-times"))))),
                       fluidRow(
-                      
                       # Box with search result: 
                       box(#title = "Search Result:",
                           collapsible = FALSE, width = NULL,
                           h2(htmlOutput("results"), align = "center")
                       )),
-                      
-                      # Row with searchbar, Accept button, Accept without ID
                       fluidRow(align = "center",
                       column(4, offset = 0,
                              searchInput(
@@ -131,13 +112,43 @@ ui <- dashboardPage(skin = "green",
                              actionButton("accept", "Accept",
                                           style = button_accept,
                                           icon = icon("user-check"))),
-                      
-                      # Pre defined actions:
                       column(4,
+                      # Pre defined actions:
                       # Accept without ID Card
                       actionButton("accept_wo_id", "Accept without ID",
                                    style = button_accept_wo_id,
-                                   icon = icon("exclamation-triangle")))))
+                                   icon = icon("exclamation-triangle")))),
+                      #fluidRow(align = "center", style = "padding-top:20px"),
+                      # Info box for sum of accepted students
+                      fluidRow(align = "center",
+                               column(10, offset = 1)),
+                      
+                      # Info box for sum of students with a note
+                      fluidRow(align = "center",style = "position:fixed, bottom:0",
+                               column(10, offset = 1)),
+                      
+                      # Shift options
+                      fluidRow(align = "center", style = "position:fixed, bottom:0",
+                               column(10, offset = 1))#,
+                      # Backup path
+                      # fluidRow(style = "padding-bottom:20px",
+                      #         htmlOutput("backup")),
+                      # Include footer
+                      # includeCSS("www/footer.css"), includeHTML("www/footer.html")
+                      ,
+                      fluidRow(
+                        column(
+                          width = 8,
+                          shinyviewr_UI("my_camera", height = '400px')
+                        ),
+                        column(
+                          width = 3,
+                          offset = 1,
+                          h2("Taken Photo"),
+                          imageOutput("snapshot")
+                        )
+                      )
+                    )
 )
 
 ################################################################################
@@ -214,18 +225,21 @@ server <- function(input, output, session) {
   })
   
   # Render sum of accepted students
+  
   output$progressBox <- renderValueBox({
     valueBox(paste0(sum(students() %>% dplyr::filter(accepted == TRUE) %>%
                           dplyr::count() - sum(stats()[,"sumstudents"]))), "students checked in.",
              icon = icon("user-check"), color = "green")})
   
   # Render sum of students with note
+  
   output$progressBox2 <- renderValueBox({valueBox(paste0(sum(students() %>%
                                                                dplyr::filter(!is.na(note)) %>%
                                                                dplyr::count())), "students with note.",
                                                   icon = icon("user-edit"), color = "yellow")})
   
   # Handle the current shift
+  
   observeEvent(input$shiftnumber, {
     con %>% dbExecute(paste("UPDATE shift ",
                             "SET shift = '", input$shiftnumber,"'", sep = "" ,collapse = ""))
@@ -240,10 +254,12 @@ server <- function(input, output, session) {
   })
   
   # Render the backup path
+  
   output$backup <- renderUI({
     HTML(paste("Saving Backup to:<br/>", backup_path, "/", sep= ""))})
   
   # Render all data tables
+  
   output$studtable_accept <- 
     DT::renderDataTable(students() %>%
                           dplyr::filter(accepted == TRUE) %>%
@@ -280,6 +296,7 @@ server <- function(input, output, session) {
                             targets = 0:6))))
   
   # Accept Event
+  
   observeEvent({
     input$accept
     input$accept_wo_id
