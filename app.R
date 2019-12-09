@@ -135,19 +135,6 @@ ui <- dashboardPage(skin = "green",
                       #         htmlOutput("backup")),
                       # Include footer
                       # includeCSS("www/footer.css"), includeHTML("www/footer.html")
-                      ,
-                      fluidRow(
-                        column(
-                          width = 8,
-                          shinyviewr_UI("my_camera", height = '400px')
-                        ),
-                        column(
-                          width = 3,
-                          offset = 1,
-                          h2("Taken Photo"),
-                          imageOutput("snapshot")
-                        )
-                      )
                     )
 )
 
@@ -157,32 +144,13 @@ ui <- dashboardPage(skin = "green",
 
 server <- function(input, output, session) {
   
-  #server side call of the drawr module
-  camera_snapshot <- callModule(
-    shinyviewr,
-    'my_camera',
-    output_width = 200,
-    output_height = 200
-  )
-  
-  output$snapshot <- renderPlot({
-    req(camera_snapshot())
-    par(mar = c(0,0,0,0))
-    plot(camera_snapshot(), main = 'My Photo!')
-    snap <- camera_snapshot()
-    png(file="tmp",
-        width=1000, height=1000)
-    par(mar = c(0,0,0,0))
-    plot(camera_snapshot(), main = 'My Photo!')
-    dev.off()
-    numbers <- tesseract(options = list(tessedit_char_whitelist = "0123456789"))
-    updateSearchInput(session, "search", value = ocr("tmp", engine = numbers), trigger = TRUE)
-  })
-  
+  # This may seem stupid but it's nessecary to init those functions to use
+  # them later with the reactivePoll() function
   students  <- function(){}
   stats     <- function(){}
-  shiftnum     <- function(){}
+  shiftnum  <- function(){}
   
+  # Create reactive tables and read them when changed
   students <- reactivePoll(intervalMillis = 500, session = session, 
                            checkFunc = function() {
                              if(all_equal(as.data.frame(students()),dbReadTable(con, "students")) %>% isTRUE()){0}else{1}},
@@ -199,7 +167,6 @@ server <- function(input, output, session) {
                         valueFunc = function(){dbReadTable(con, "shift")})
   
   # Render the search results:
-  
   output$results <- renderUI({
     forename <- students() %>% dplyr::filter(
       str_detect(input$search, as.character(students()$matrnumber)) |
@@ -225,26 +192,24 @@ server <- function(input, output, session) {
   })
   
   # Render sum of accepted students
-  
   output$progressBox <- renderValueBox({
     valueBox(paste0(sum(students() %>% dplyr::filter(accepted == TRUE) %>%
                           dplyr::count() - sum(stats()[,"sumstudents"]))), "students checked in.",
              icon = icon("user-check"), color = "green")})
   
   # Render sum of students with note
-  
   output$progressBox2 <- renderValueBox({valueBox(paste0(sum(students() %>%
                                                                dplyr::filter(!is.na(note)) %>%
                                                                dplyr::count())), "students with note.",
                                                   icon = icon("user-edit"), color = "yellow")})
   
   # Handle the current shift
-  
   observeEvent(input$shiftnumber, {
     con %>% dbExecute(paste("UPDATE shift ",
                             "SET shift = '", input$shiftnumber,"'", sep = "" ,collapse = ""))
     })
   
+  # Observe shiftnumber slider
   observeEvent(shiftnum(), {
     updateRadioGroupButtons(session, inputId = "shiftnumber",
                             label = "Shift",
@@ -254,30 +219,25 @@ server <- function(input, output, session) {
   })
   
   # Render the backup path
-  
   output$backup <- renderUI({
     HTML(paste("Saving Backup to:<br/>", backup_path, "/", sep= ""))})
   
   # Render all data tables
-  
-  output$studtable_accept <- 
-    DT::renderDataTable(students() %>%
+  output$studtable_accept <- DT::renderDataTable(students() %>%
                           dplyr::filter(accepted == TRUE) %>%
                           dplyr::arrange(desc(modified)) %>%
                           dplyr::select(-modified), rownames = FALSE,
                         options = list(columnDefs = list(list(
                           className = 'dt-center', 
                           targets = 0:6))))
-  output$studtable_decline <- 
-    DT::renderDataTable(students() %>%
+  output$studtable_decline <- DT::renderDataTable(students() %>%
                           dplyr::filter(accepted == FALSE) %>%
                           dplyr::arrange(desc(modified)) %>%
                           dplyr::select(-modified), rownames = FALSE,
                         options = list(columnDefs = list(list(
                           className = 'dt-center', 
                           targets = 0:6))))
-  output$studtable_open <- 
-    DT::renderDataTable(students() %>% 
+  output$studtable_open <- DT::renderDataTable(students() %>% 
                           dplyr::filter(is.na(accepted)) %>% 
                           dplyr::arrange(desc(modified), name) %>%
                           dplyr::select(-modified), rownames = FALSE,
@@ -285,8 +245,7 @@ server <- function(input, output, session) {
                           columnDefs = list(list(
                             className = 'dt-center', 
                             targets = 0:6))))
-  output$studtable_note <- 
-    DT::renderDataTable(students() %>%
+  output$studtable_note <- DT::renderDataTable(students() %>%
                           dplyr::filter(!is.na(note)) %>%
                           arrange(desc(modified)) %>%
                           dplyr::select(-modified),rownames = FALSE,
@@ -296,12 +255,9 @@ server <- function(input, output, session) {
                             targets = 0:6))))
   
   # Accept Event
-  
-  observeEvent({
-    input$accept
-    input$accept_wo_id
-    }, {
-    
+  observeEvent(c(
+    input$accept,
+    input$accept_wo_id), {
     sid_a <- which(str_detect(input$search,
                               as.character(students()$matrnumber)) |
                      students()$name == input$search)
@@ -327,6 +283,7 @@ server <- function(input, output, session) {
               text = "You've reached your specified limit. Do you still want to accept this student?",
               danger_mode = TRUE)
           } else {
+            
             # Accept the student, write log and write modification time
             con %>% dbExecute(paste("UPDATE students ",
                                     "SET accepted = '1', log = '", paste(na.omit(c(students()[sid_a, "log"],as.character(Sys.time()), "[A]")), collapse = " "),"', modified = '", Sys.time(), "' ",
@@ -390,7 +347,6 @@ server <- function(input, output, session) {
     }})
   
   # Add note if accepted without ID
-  
   observeEvent(input$accept_wo_id, {
     
     sid_n <- which(str_detect(input$search,
