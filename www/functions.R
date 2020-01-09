@@ -20,4 +20,3 @@ log_backup_reset <- function(sid, event, note = NA, backup_path = backup_path,
   updateSearchInput(session, "search", value = "", trigger = TRUE)
   session$sendCustomMessage("focus_search", "focus")
 }
-

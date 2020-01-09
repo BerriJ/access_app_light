@@ -10,4 +10,5 @@ pacman::p_load(shinydashboard,
                pool,
                shinysense,
                png,
-               tesseract)
+               tesseract,
+               shinysense)

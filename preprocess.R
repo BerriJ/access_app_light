@@ -7,6 +7,10 @@ pacman::p_load(readxl,
 
 dataset <- read_excel(file.choose(),skip = 4)
 
+#load('students_example.Rda')
+
+#dataset <- students
+
 students <- dataset %>% as_tibble() %>% 
   mutate_at(vars("Matrikelnummer"), .funs = as.numeric) %>%
   dplyr::select("Vorname", "Nachname", "Matrikelnummer") %>%
